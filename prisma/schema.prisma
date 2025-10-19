@@ -13,20 +13,96 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
+model Course {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  content     String
+  imageUrl    String?
+  price       Int
+  duration    Int      // duration in hours
+  level       Level    @default(BEGINNER)
+  category    Category @relation(fields: [categoryId], references: [id])
+  categoryId  String
+  teacher     Teacher  @relation(fields: [teacherId], references: [id])
+  teacherId   String
+  isActive    Boolean  @default(true)
+  enrollments Enrollment[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Teacher {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  bio         String?
+  imageUrl    String?
+  expertise   String
+  experience  Int      // years of experience
+  courses     Course[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  icon        String?
+  courses     Course[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ContactMessage {
   id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String
+  isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model Post {
-  id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model User {
+  id            String   @id @default(cuid())
+  phone         String   @unique
+  name          String?
+  email         String?  @unique
+  avatar        String?
+  isActive      Boolean  @default(true)
+  enrollments   Enrollment[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Enrollment {
+  id         String   @id @default(cuid())
+  userId     String
+  courseId   String
+  status     EnrollmentStatus @default(PENDING)
+  progress   Float    @default(0) // progress percentage 0-100
+  enrolledAt DateTime @default(now())
+  completedAt DateTime?
+  
+  user       User     @relation(fields: [userId], references: [id])
+  course     Course   @relation(fields: [courseId], references: [id])
+  
+  @@unique([userId, courseId])
+}
+
+enum Level {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum EnrollmentStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  CANCELLED
 }
